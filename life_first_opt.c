@@ -1,9 +1,20 @@
+/*
+Version of life with graphics.
+
+To compile include the flags: -I/usr/X11R6/include -L/usr/X11R6/lib -lX11
+And link to graphics.c
+
+
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "graphics.h"
+#include <sys/time.h>
 
-#define MAX_GEN 100
+#define MAX_GEN 2000
+
+const int cellColor=0;
+const int windowWidth=800;
 
 void read_data(const char* filename, int** state, int N){
   FILE* fp;
@@ -35,19 +46,40 @@ void display(int N, int** state){
   }
 }
 
-void next_gen(int N, int** state, int** state_new){
+void DrawCell(int i, int j, int N, int L, int W){
+  float dx = 1/(float)N;
+  float dy = dx;
+  float cellWidth = dx;
+  float x = dx*j - dx/2;
+  float y = 1 - dx*i -dy/2; //as to preserve same order as matrix (0,0) on top
+  DrawRectangle(x,y, L, W, cellWidth, cellWidth, cellColor);
+  return;
+}
+
+void next_gen_graph(int N, int** state, int** state_new, int W, int L){
   //get neighbours
   //get first row
   for(int i=1; i < N+1; i++){
+    //new Version
+    int v1 = 0, v2 = state[i-1][j] + state[i+1][j];
     for(int j=1; j < N+1; j++){
       int num_neighbours= state[i-1][j-1] + state[i-1][j] + state[i-1][j+1] +
       state[i][j-1] +state[i][j+1] +state[i+1][j-1] +state[i+1][j]
       +state[i+1][j+1];
+      //new version
+      //get v3
+      v3 = state[i-1][j+1] + state[i][j+1] + state[i+1][j+1];
+      int v= v1+v2+v3;
+      if(v!= num_neighbours){
+        printf("there is a bug, at %d, %d\n", i,j);
+      }
       if(state[i][j]==1){
         //cell is on, if 2 n or 3 stays on otherwise dies
-        state_new[i][j]=1;
-        if(num_neighbours !=2  && num_neighbours != 3)
+        if(num_neighbours !=2  && num_neighbours != 3){
           state_new[i][j]=0;
+        }else{
+          state_new[i][j]=1;
+        }
       }else{
         state_new[i][j]=0;
         //cell is off, turn on if 3 neighbours
@@ -58,14 +90,22 @@ void next_gen(int N, int** state, int** state_new){
     }
   }
 }
+
 int main(int argc, char const *argv[]) {
+  float L=1, W=1;
   if(argc != 2){
     printf("Invalid number of inputs, we need: filename \n");
     return -1;
   }
   const char* filename = argv[1];
-  printf("We are using input from: %s\n", filename);
-  int N = 50;
+  //printf("We are using input from: %s\n", filename);
+
+  struct timeval tini, tfin;
+  gettimeofday(&tini,0);
+  //Program starts:
+
+  //CELL NUMBER
+  int N = 100;
   int** state = (int**)malloc(sizeof(int*)*(N+2));
   int** state_new = (int**)malloc(sizeof(int*)*(N+2));
   for(int i=0; i<N+2;i++){
@@ -79,31 +119,24 @@ int main(int argc, char const *argv[]) {
   read_data(filename, state, N);
   read_data(filename, state_new, N);
 
+  //GRAPHICS
+  InitializeGraphics("0",windowWidth,windowWidth);
+  SetCAxes(0,1);
   //next generation function, calculates state in the new generation
   int*** p_state = &state;
   int*** p_state_new = &state_new;
   for(int j=0;j< MAX_GEN; j++){
-    printf("Gen: %d \n", j);
+    //printf("Gen: %d \n", j);
     // printf("Original state:  \n");
-    display(N, *p_state);
-    next_gen(N, *p_state, *p_state_new);
-    // printf("Next generation: \n");
-    // display(N, state_new);
-    // printf("Next generation from pointer (should be the same): \n");
-    // display(N, *p_state_new);
-    //point state to new state and
-    //state_new to state as not to malloc anything else
+
+    //display(N, *p_state);
+    next_gen_graph(N, *p_state, *p_state_new, W, L);
     int ***aux;
     aux = p_state;
     p_state = p_state_new;
     p_state_new = aux;
-    // printf("After the swap we have: \n");
-    // printf("This is the new var: state\n");
-    // display(N, *p_state);
-    // printf("This is the new var: new_state\n");
-    // display(N, *p_state_new);
-  }
 
+  }
 
   //free arrays
   for(int i=0; i< N+2; i++){
@@ -112,8 +145,18 @@ int main(int argc, char const *argv[]) {
   }
   free(state);
   free(state_new);
-  free(p_state);
-  free(p_state_new);
+  gettimeofday(&tfin,0);
 
+  float elapsed_time_sec =(tfin.tv_sec -tini.tv_sec)
+                          +(tfin.tv_usec -tini.tv_usec)/1e6;
+  //printf("elapsed time: %f\n", elapsed_time_sec);
+  FILE* ftime=NULL;
+  ftime =fopen("time.txt", "a+");
+  if(ftime==NULL){
+    printf("Error writing to file\n");
+  }else{
+    fprintf(ftime, "%f\n",elapsed_time_sec);
+  }
+  fclose(ftime);
   return 0;
 }
