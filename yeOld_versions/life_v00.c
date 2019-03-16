@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 
-#define MAX_GEN 100
+#define MAX_GEN 200
 
 void read_data(const char* filename, int** state, int N){
   FILE* fp;
@@ -59,6 +60,8 @@ void next_gen(int N, int** state, int** state_new){
     }
   }
 }
+
+
 int main(int argc, char const *argv[]) {
   if(argc != 2){
     printf("Invalid number of inputs, we need: filename \n");
@@ -66,7 +69,10 @@ int main(int argc, char const *argv[]) {
   }
   const char* filename = argv[1];
   printf("We are using input from: %s\n", filename);
-  int N = 20;
+  //Sart timing
+  struct timeval tini, tfin;
+  gettimeofday(&tini,0);
+  int N = 4000;
   int** state = (int**)malloc(sizeof(int*)*(N+2));
   int** state_new = (int**)malloc(sizeof(int*)*(N+2));
   for(int i=0; i<N+2;i++){
@@ -84,9 +90,8 @@ int main(int argc, char const *argv[]) {
   int*** p_state = &state;
   int*** p_state_new = &state_new;
   for(int j=0;j< MAX_GEN; j++){
-    printf("Gen: %d \n", j);
     // printf("Original state:  \n");
-    display(N, *p_state);
+    //display(N, *p_state);
     next_gen(N, *p_state, *p_state_new);
     // printf("Next generation: \n");
     // display(N, state_new);
@@ -113,5 +118,19 @@ int main(int argc, char const *argv[]) {
   }
   free(state);
   free(state_new);
+
+  gettimeofday(&tfin,0);
+  float elapsed_time_sec =(tfin.tv_sec -tini.tv_sec)
+                          +(tfin.tv_usec -tini.tv_usec)/1e6;
+  //printf("elapsed time: %f\n", elapsed_time_sec);
+  FILE* ftime=NULL;
+  ftime =fopen("time.txt", "a+");
+  if(ftime==NULL){
+    printf("Error writing to file\n");
+  }else{
+    fprintf(ftime, "%f\n",elapsed_time_sec);
+  }
+  fclose(ftime);
+
   return 0;
 }

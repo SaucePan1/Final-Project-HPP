@@ -1,7 +1,8 @@
 #!/bin/bash
-input_file=$1
-script=$2
-
+script=$1
+input_file="growth_testing.txt"
+N=4000
+MAX_GEN=200
 
 make generate_with_01 argument="$script"
 printf '\n \n \n'
@@ -10,7 +11,7 @@ pwd
 counter=1
 while [ $counter -le 3 ]
 do
-	./first_optimization "$input_file"
+	./first_optimization $N $MAX_GEN 0 "$input_file"
 
 	((counter++))
 done
@@ -28,7 +29,7 @@ pwd
 counter=1
 while [ $counter -le 3 ]
 do
-	./second_optimization "$input_file"
+	./second_optimization $N $MAX_GEN 0 "$input_file"
 	((counter++))
 done
 printf '\n \n \n'
@@ -45,7 +46,7 @@ pwd
 counter=1
 while [ $counter -le 3 ]
 do
-	./third_optimization "$input_file"
+	./third_optimization $N $MAX_GEN 0 "$input_file"
 	((counter++))
 done
 printf '\n \n \n'
@@ -62,7 +63,7 @@ pwd
 counter=1
 while [ $counter -le 3 ]
 do
-	./ffast_math "$input_file"
+	./ffast_math $N $MAX_GEN 0 "$input_file"
 	((counter++))
 done
 printf '\n \n \n'
@@ -79,7 +80,7 @@ pwd
 counter=1
 while [ $counter -le 3 ]
 do
-	./ffast_native "$input_file"
+	./ffast_native $N $MAX_GEN 0 "$input_file"
 	((counter++))
 done
 printf '\n \n \n'
@@ -96,7 +97,7 @@ pwd
 counter=1
 while [ $counter -le 3 ]
 do
-	./ffast_native "$input_file"
+	./ffast_native $N $MAX_GEN 0 "$input_file"
 	((counter++))
 done
 printf '\n \n \n'

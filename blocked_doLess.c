@@ -11,7 +11,7 @@ And link to graphics.c
 #include <string.h>
 #include <sys/time.h>
 
-#define MAX_GEN 2000
+//for testing 200
 
 const int cellColor=0;
 const int windowWidth=800;
@@ -46,35 +46,50 @@ void display(int N, int** state){
   }
 }
 
-void DrawCell(int i, int j, int N, int L, int W){
-  float dx = 1/(float)N;
-  float dy = dx;
-  float cellWidth = dx;
-  float x = dx*j - dx/2;
-  float y = 1 - dx*i -dy/2; //as to preserve same order as matrix (0,0) on top
-  DrawRectangle(x,y, L, W, cellWidth, cellWidth, cellColor);
-  return;
-}
+// void DrawCell(int i, int j, int N, int L, int W){
+//   float dx = 1/(float)N;
+//   float dy = dx;
+//   float cellWidth = dx;
+//   float x = dx*j - dx/2;
+//   float y = 1 - dx*i -dy/2; //as to preserve same order as matrix (0,0) on top
+//   DrawRectangle(x,y, L, W, cellWidth, cellWidth, cellColor);
+//   return;
+// }
 
-void next_gen_graph(int N, int** state, int** state_new, int W, int L){
+
+// void updateCell(int i, int j, int num_neighbours, int** state, int** state_new){
+//   if(state[i][j]==1){
+//     //cell is on, if 2 n or 3 stays on otherwise dies
+//     if(num_neighbours !=2  && num_neighbours != 3){
+//       state_new[i][j]=0;
+//     }else{
+//       state_new[i][j]=1;
+//     }
+//   }else{
+//     state_new[i][j]=0;
+//     //cell is off, turn on if 3 neighbours
+//     if(num_neighbours ==3){
+//       state_new[i][j]=1;
+//     }
+//   }
+// return;
+// }
+
+void next_gen(int N, int** state, int** state_new){
   //get neighbours
   //get first row
   for(int i=1; i < N+1; i++){
-    //new Version
+    int j=1;
     int v1 = 0, v2 = state[i-1][j] + state[i+1][j];
-    for(int j=1; j < N+1; j++){
-      int num_neighbours= state[i-1][j-1] + state[i-1][j] + state[i-1][j+1] +
-      state[i][j-1] +state[i][j+1] +state[i+1][j-1] +state[i+1][j]
-      +state[i+1][j+1];
-      //new version
+    for(j=1; j < N+1; j++){
       //get v3
-      v3 = state[i-1][j+1] + state[i][j+1] + state[i+1][j+1];
-      int v= v1+v2+v3;
-      if(v!= num_neighbours){
-        printf("there is a bug, at %d, %d\n", i,j);
-      }
+      int v3 = state[i-1][j+1] + state[i][j+1] + state[i+1][j+1];
+      int num_neighbours= v1+v2+v3;
+      //Update the Cell
       if(state[i][j]==1){
         //cell is on, if 2 n or 3 stays on otherwise dies
+        //we correct v2
+        v2++;
         if(num_neighbours !=2  && num_neighbours != 3){
           state_new[i][j]=0;
         }else{
@@ -87,25 +102,29 @@ void next_gen_graph(int N, int** state, int** state_new, int W, int L){
           state_new[i][j]=1;
         }
       }
+      v1 = v2;
+      v2 = v3 - state[i][j+1];
     }
   }
 }
 
 int main(int argc, char const *argv[]) {
-  float L=1, W=1;
-  if(argc != 2){
-    printf("Invalid number of inputs, we need: filename \n");
+
+  if(argc != 5){
+    printf("Invalid number of inputs, we need: N MAX_GEN display filename \n");
     return -1;
   }
-  const char* filename = argv[1];
+  int N = atoi(argv[1]);
+  int MAX_GEN = atoi(argv[2]);
+  int disp= atoi(argv[3]);
+  const char* filename = argv[4];
   //printf("We are using input from: %s\n", filename);
 
   struct timeval tini, tfin;
   gettimeofday(&tini,0);
   //Program starts:
 
-  //CELL NUMBER
-  int N = 100;
+  //CELL NUMBER for testing 4000
   int** state = (int**)malloc(sizeof(int*)*(N+2));
   int** state_new = (int**)malloc(sizeof(int*)*(N+2));
   for(int i=0; i<N+2;i++){
@@ -119,9 +138,6 @@ int main(int argc, char const *argv[]) {
   read_data(filename, state, N);
   read_data(filename, state_new, N);
 
-  //GRAPHICS
-  InitializeGraphics("0",windowWidth,windowWidth);
-  SetCAxes(0,1);
   //next generation function, calculates state in the new generation
   int*** p_state = &state;
   int*** p_state_new = &state_new;
@@ -129,8 +145,8 @@ int main(int argc, char const *argv[]) {
     //printf("Gen: %d \n", j);
     // printf("Original state:  \n");
 
-    //display(N, *p_state);
-    next_gen_graph(N, *p_state, *p_state_new, W, L);
+    if(disp){display(N, *p_state);}
+    next_gen(N, *p_state, *p_state_new);
     int ***aux;
     aux = p_state;
     p_state = p_state_new;

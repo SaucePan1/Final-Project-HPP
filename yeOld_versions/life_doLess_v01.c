@@ -1,18 +1,18 @@
 /*
-Version of life with graphics.
+Version of life, where we try to reduce the number of operations in the inner
+loop by if and num_neeighbour++ statements instead of sums.
+its actually slower.
 
 To compile include the flags: -I/usr/X11R6/include -L/usr/X11R6/lib -lX11
 And link to graphics.c
-
 
 */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
-#include "graphics/graphics.h"
 
-#define MAX_GEN 2000
+//for testing 200
 
 const int cellColor=0;
 const int windowWidth=800;
@@ -47,38 +47,88 @@ void display(int N, int** state){
   }
 }
 
-void DrawCell(int i, int j, int N, int L, int W){
-  float dx = 1/(float)N;
-  float dy = dx;
-  float cellWidth = dx;
-  float x = dx*j - dx/2;
-  float y = 1 - dx*i -dy/2; //as to preserve same order as matrix (0,0) on top
-  DrawRectangle(x,y, L, W, cellWidth, cellWidth, cellColor);
-  return;
-}
+// void DrawCell(int i, int j, int N, int L, int W){
+//   float dx = 1/(float)N;
+//   float dy = dx;
+//   float cellWidth = dx;
+//   float x = dx*j - dx/2;
+//   float y = 1 - dx*i -dy/2; //as to preserve same order as matrix (0,0) on top
+//   DrawRectangle(x,y, L, W, cellWidth, cellWidth, cellColor);
+//   return;
+// }
 
-void next_gen_graph(int N, int** state, int** state_new, int W, int L){
+
+// void updateCell(int i, int j, int num_neighbours, int** state, int** state_new){
+//   if(state[i][j]==1){
+//     //cell is on, if 2 n or 3 stays on otherwise dies
+//     if(num_neighbours !=2  && num_neighbours != 3){
+//       state_new[i][j]=0;
+//     }else{
+//       state_new[i][j]=1;
+//     }
+//   }else{
+//     state_new[i][j]=0;
+//     //cell is off, turn on if 3 neighbours
+//     if(num_neighbours ==3){
+//       state_new[i][j]=1;
+//     }
+//   }
+// return;
+// }
+
+void next_gen(int N, int** state, int** state_new){
   //get neighbours
   //get first row
-
-
+  for(int i=1; i < N+1; i++){
+    int j=1;
+    int v1 = 0, v2 = state[i-1][j] + state[i+1][j];
+    for(j=1; j < N+1; j++){
+      //get v3
+      int v3 = 0;
+      if(state[i-1][j+1]){v3++;}
+      if(state[i][j+1]){v3++;}
+      if(state[i+1][j+1]){v3++;}
+      int num_neighbours= v1+v2+v3;
+      //Update the Cell
+      if(state[i][j]==1){
+        //cell is on, if 2 n or 3 stays on otherwise dies
+        //we correct v2
+        v2++;
+        if(num_neighbours !=2  && num_neighbours != 3){
+          state_new[i][j]=0;
+        }else{
+          state_new[i][j]=1;
+        }
+      }else{
+        state_new[i][j]=0;
+        //cell is off, turn on if 3 neighbours
+        if(num_neighbours ==3){
+          state_new[i][j]=1;
+        }
+      }
+      v1 = v2;
+      v2 = v3 - state[i][j+1];
+    }
+  }
 }
 
 int main(int argc, char const *argv[]) {
-  float L=1, W=1;
-  if(argc != 2){
-    printf("Invalid number of inputs, we need: filename \n");
+
+  if(argc != 5){
+    printf("Invalid number of inputs, we need: N MAX_GEN display filename \n");
     return -1;
   }
-  const char* filename = argv[1];
+  int N = atoi(argv[1]);
+  int MAX_GEN = atoi(argv[2]);
+  int disp= atoi(argv[3]);
+  const char* filename = argv[4];
   //printf("We are using input from: %s\n", filename);
 
   struct timeval tini, tfin;
   gettimeofday(&tini,0);
   //Program starts:
 
-  //CELL NUMBER
-  int N = 100;
+  //CELL NUMBER for testing 4000
   int** state = (int**)malloc(sizeof(int*)*(N+2));
   int** state_new = (int**)malloc(sizeof(int*)*(N+2));
   for(int i=0; i<N+2;i++){
@@ -92,28 +142,21 @@ int main(int argc, char const *argv[]) {
   read_data(filename, state, N);
   read_data(filename, state_new, N);
 
-  //GRAPHICS
-  InitializeGraphics("0",windowWidth,windowWidth);
-  SetCAxes(0,1);
   //next generation function, calculates state in the new generation
   int*** p_state = &state;
   int*** p_state_new = &state_new;
   for(int j=0;j< MAX_GEN; j++){
     //printf("Gen: %d \n", j);
     // printf("Original state:  \n");
-    ClearScreen();
-    //display(N, *p_state);
-    next_gen_graph(N, *p_state, *p_state_new, W, L);
-    Refresh();
+
+    if(disp){display(N, *p_state);}
+    next_gen(N, *p_state, *p_state_new);
     int ***aux;
     aux = p_state;
     p_state = p_state_new;
     p_state_new = aux;
 
-    usleep(50000); //Sleep so graphics dont go cray
   }
-  FlushDisplay();
-  CloseDisplay();
 
   //free arrays
   for(int i=0; i< N+2; i++){
