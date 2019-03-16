@@ -1,7 +1,7 @@
 /*
 Version of life with graphics.
 
-To compile include the flags: -I/usr/X11R6/include -L/usr/X11R6/lib -lX11
+To compile include the flags: -I/opt/X11/include -L/opt/X11/lib -lX11
 And link to graphics.c
 
 
@@ -12,7 +12,7 @@ And link to graphics.c
 #include <sys/time.h>
 #include "graphics/graphics.h"
 
-#define MAX_GEN 2000
+#define MAX_GEN 200
 
 const int cellColor=0;
 const int windowWidth=800;
@@ -57,11 +57,44 @@ void DrawCell(int i, int j, int N, int L, int W){
   return;
 }
 
+void updateCell(int i, int j, int num_neighbours,
+  int** state, int** state_new, int N, int L, int W){
+  if(state[i][j]==1){
+    //cell is on, if 2 n or 3 stays on otherwise dies
+    if(num_neighbours !=2  && num_neighbours != 3){
+      state_new[i][j]=0;
+    }else{
+      state_new[i][j]=1;
+      DrawCell(i,j, N, L, W);
+    }
+  }else{
+    state_new[i][j]=0;
+    //cell is off, turn on if 3 neighbours
+    if(num_neighbours ==3){
+      state_new[i][j]=1;
+      DrawCell(i,j, N, L, W);
+    }
+  }
+return;
+}
+
+int get_neighbours(int i, int j, int** state){
+
+  int n=state[i-1][j-1] + state[i-1][j] + state[i-1][j+1] +
+  state[i][j-1] +state[i][j+1] +state[i+1][j-1] +state[i+1][j]
+  +state[i+1][j+1];
+  return n;
+}
+
+
 void next_gen_graph(int N, int** state, int** state_new, int W, int L){
   //get neighbours
-  //get first row
-
-
+  for(int i=1; i < N+1; i++){
+    for(int j=1; j < N+1; j++){
+      int num_neighbours = get_neighbours(i,j, state);
+      updateCell(i, j, num_neighbours, state, state_new, N, L, W);
+    }
+  }
 }
 
 int main(int argc, char const *argv[]) {
@@ -78,7 +111,7 @@ int main(int argc, char const *argv[]) {
   //Program starts:
 
   //CELL NUMBER
-  int N = 100;
+  int N = 4000;
   int** state = (int**)malloc(sizeof(int*)*(N+2));
   int** state_new = (int**)malloc(sizeof(int*)*(N+2));
   for(int i=0; i<N+2;i++){

@@ -75,6 +75,14 @@ void display(int N, int** state){
 //   }
 // return;
 // }
+//
+// int get_neighbours(int i, int j, int** state){
+//
+//   int n=state[i-1][j-1] + state[i-1][j] + state[i-1][j+1] +
+//   state[i][j-1] +state[i][j+1] +state[i+1][j-1] +state[i+1][j]
+//   +state[i+1][j+1];
+//   return n;
+// }
 
 void next_gen(int N, int** state, int** state_new){
   //get neighbours

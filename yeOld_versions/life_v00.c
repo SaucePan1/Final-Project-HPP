@@ -35,6 +35,7 @@ void display(int N, int** state){
   }
 }
 
+
 void next_gen(int N, int** state, int** state_new){
   //get neighbours
   //get first row
