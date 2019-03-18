@@ -75,15 +75,16 @@ void display(int N, int** state){
 // return;
 // }
 
-void UpdateCellsOnBlock(int iStart, int iEnd, int jStart, int jEnd,
-  int **state, int** state_new){
-  for(int i=iStart; i < iEnd; i++){
-    int j=jStart;
-    int v1 = state[i-1][j-1] + state[i-1][j], state[i-1][j+1];
-    int v2 = state[i-1][j] + state[i+1][j];
-    for(j=1; j < jEnd; j++){
+void next_gen(int N, int** state, int** state_new){
+  //get neighbours
+  //get first row
+  for(int j=1; j < N+1; j++){
+    int i=1;
+    int v1 = state[i-1][j-1]+ state[i-1][j] + state[i-1][j+1];
+    int v2 = state[i][j-1] + state[i][j+1];
+    for(i=1; i < N+1; i++){
       //get v3
-      int v3 = state[i-1][j+1] + state[i][j+1] + state[i+1][j+1];
+      int v3 = state[i+1][j-1] + state[i+1][j] + state[i+1][j+1];
       int num_neighbours= v1+v2+v3;
       //Update the Cell
       if(state[i][j]==1){
@@ -106,26 +107,6 @@ void UpdateCellsOnBlock(int iStart, int iEnd, int jStart, int jEnd,
       v2 = v3 - state[i][j+1];
     }
   }
-  return;
-}
-
-void next_gen(int N, int** state, int** state_new){
-  int blockSz=100;
-  int iStart;
-  for(iStart=1; iStart+blockSz<N+1; iStart+=blockSz){
-    int iEnd = iStart+blockSz;
-    int jStart;
-    for(jStart = 1; jStart+blockSz< N+1; jStart += blockSz){
-      int jEnd = jStart+blockSz;
-      UpdateCellsOnBlock(iStart, iEnd, jStart, jEnd,
-         state, state_new);
-    }
-    //Update remaining j
-    UpdateCellsOnBlock(iStart, iEnd, jStart, N+1, state, state_new);
-  }
-  //Update remaining i
-  UpdateCellsOnBlock(iStart, N+1, 1, N+1, state, state_new);
-  return;
 }
 
 int main(int argc, char const *argv[]) {

@@ -24,7 +24,8 @@ generate_with_ffast_native:${argument}
 generate_with_ffast_msse4:${argument}
 	@gcc $(CFLAGS) -O3 -ffast-math -msse4.2 -o ffast_native ${argument} graphics/graphics.c $(LDFLAGS)
 
-
+test:
+	./life 10 25 1 glider_at_10.txt
 clean:
 	@rm -f first_optimization
 	@rm -f second_optimization
