@@ -56,6 +56,23 @@ printf '\n \n \n'
 python3 print_mean_std.py
 make clean
 
+# make generate_with_funroll argument="$script"
+# printf '\n \n \n'
+# printf '\n \n \n'
+# pwd
+# counter=1
+# while [ $counter -le 3 ]
+# do
+# 	./third_optimization $N $MAX_GEN 0 "$input_file"
+# 	((counter++))
+# done
+# printf '\n \n \n'
+# echo "Result with O3 -ffunroll flag -------------------------------"
+# echo "<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+# printf '\n \n \n'
+# python3 print_mean_std.py
+# make clean
+
 make generate_with_ffast_math argument="$script"
 printf '\n \n \n'
 printf '\n \n \n'

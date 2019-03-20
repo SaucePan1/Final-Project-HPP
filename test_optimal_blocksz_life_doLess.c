@@ -11,8 +11,8 @@ And link to graphics.c
 #include <string.h>
 #include <sys/time.h>
 
-#define blockSz 10
 //for testing 200
+
 const int cellColor=0;
 const int windowWidth=800;
 
@@ -33,18 +33,7 @@ void read_data(const char* filename, int** state, int N){
   }
   return;
 }
-void display_temp(int N, int** state){
-  for(int i =0; i<N; i++){
-    for(int j=0; j< N; j++){
-      if(state[i][j] == 0)
-        printf(" -");
-      else
-        printf(" o");
-    }
-    printf("\n");
-  }
-  return;
-}
+
 void display(int N, int** state){
   for(int i =1; i<N+1; i++){
     for(int j=1; j< N+1; j++){
@@ -55,7 +44,6 @@ void display(int N, int** state){
     }
     printf("\n");
   }
-  return;
 }
 
 // void DrawCell(int i, int j, int N, int L, int W){
@@ -87,19 +75,16 @@ void display(int N, int** state){
 // return;
 // }
 
-void testUpdateCellsOnBlock(int iStart, int iEnd, int jStart, int jEnd,
-  int **state, int** state_new, int** temp){
-
-
-  for(int i=iStart; i < iEnd; i++){
-    int j=jStart;
-    int v1 = state[i-1][j-1] + state[i][j-1]+ state[i+1][j-1];
-    int v2 = state[i-1][j] + state[i+1][j];
-    for(j=jStart; j < jEnd; j++){
+void next_gen(int N, int** state, int** state_new){
+  //get neighbours
+  //get first row
+  for(int i=1; i < N+1; i++){
+    int j=1;
+    int v1 = 0, v2 = state[i-1][j] + state[i+1][j];
+    for(j=1; j < N+1; j++){
       //get v3
       int v3 = state[i-1][j+1] + state[i][j+1] + state[i+1][j+1];
       int num_neighbours= v1+v2+v3;
-      printf("%d %d n %d \n", i, j, num_neighbours);
       //Update the Cell
       if(state[i][j]==1){
         //cell is on, if 2 n or 3 stays on otherwise dies
@@ -117,76 +102,10 @@ void testUpdateCellsOnBlock(int iStart, int iEnd, int jStart, int jEnd,
           state_new[i][j]=1;
         }
       }
-        v1 = v2;
-        v2 = v3 - state[i][j+1];
-    }
-  }
-}
-
-void UpdateCellsOnBlock(int iStart, int iEnd, int jStart, int jEnd,
-  int **state, int** state_new, int** temp){
-
-  //We need padding!
-  for(int i = 0; i<blockSz+2; i++){
-    memcpy(temp[i], &state[iStart+i-1][jStart-1], sizeof(int)*(blockSz+2));
-  }
-
-
-  // printf("Display state: \n");
-  // display(10, state);
-  // printf("Display temp\n");
-  // display_temp(blockSz+2, temp);
-
-  for(int i=1; i < blockSz+1; i++){
-    int j=1;
-    int v1 = temp[i-1][j-1] + temp[i][j-1]+ temp[i+1][j-1];
-    //int v1 = 0;
-    int v2 = temp[i-1][j] + temp[i+1][j];
-    for(j=1; j < blockSz+1; j++){
-      //get v3
-      int v3 = temp[i-1][j+1] + temp[i][j+1] + temp[i+1][j+1];
-      int num_neighbours= v1+v2+v3;
-      //Update the Cell
-      if(temp[i][j]==1){
-        //cell is on, if 2 n or 3 stays on otherwise dies
-        //we correct v2
-        v2++;
-        if(num_neighbours !=2  && num_neighbours != 3){
-          state_new[iStart -1 +i][jStart -1 +j]=0;
-        }else{
-          state_new[iStart -1 +i][jStart -1 +j]=1;
-        }
-      }else{
-        state_new[iStart -1 +i][jStart -1 +j]=0;
-        //cell is off, turn on if 3 neighbours
-        if(num_neighbours ==3){
-          state_new[iStart -1 +i][jStart -1 +j]=1;
-        }
-      }
       v1 = v2;
-      v2 = v3 - temp[i][j+1];
+      v2 = v3 - state[i][j+1];
     }
   }
-}
-
-
-void next_gen(int N, int** state, int** state_new, int** temp){
-
-  int iStart;
-  for(iStart=1; iStart+blockSz<N+1; iStart+=blockSz){
-    int iEnd = iStart+blockSz;
-    int jStart;
-    for(jStart = 1; jStart+blockSz< N+1; jStart += blockSz){
-      int jEnd = jStart+blockSz;
-      testUpdateCellsOnBlock(iStart, iEnd, jStart, jEnd,
-         state, state_new, temp);
-    }
-    //Update remaining j
-    testUpdateCellsOnBlock(iStart, iEnd, jStart, N+1, state, state_new, temp);
-  }
-  //Update remaining i
-  testUpdateCellsOnBlock(iStart, N+1, 1, N+1, state, state_new, temp);
-  return;
 }
 
 int main(int argc, char const *argv[]) {
@@ -202,24 +121,18 @@ int main(int argc, char const *argv[]) {
   //printf("We are using input from: %s\n", filename);
 
   struct timeval tini, tfin;
-  gettimeofday(&tini,0);
   //Program starts:
 
   //CELL NUMBER for testing 4000
   int** state = (int**)malloc(sizeof(int*)*(N+2));
   int** state_new = (int**)malloc(sizeof(int*)*(N+2));
   for(int i=0; i<N+2;i++){
-    //allocate memory for bboth
+    //allocate memory for both
     state[i]=(int*)malloc(sizeof(int)*(N+2));
     state_new[i]=(int*)malloc(sizeof(int)*(N+2));
     //set state to 0
     memset(state[i], 0, sizeof(int)*(N+2));
     memset(state_new[i], 0, sizeof(int)*(N+2));
-  }
-  //allocate mem for the temp block
-  int** temp = (int**)malloc(sizeof(int*)*(blockSz+2));
-  for(int i=0; i<blockSz+2; i++){
-    temp[i]=(int*)malloc(sizeof(int)*(blockSz+2));
   }
   read_data(filename, state, N);
   read_data(filename, state_new, N);
@@ -227,20 +140,37 @@ int main(int argc, char const *argv[]) {
   //next generation function, calculates state in the new generation
   int*** p_state = &state;
   int*** p_state_new = &state_new;
+  gettimeofday(&tini,0);
   for(int j=0;j< MAX_GEN; j++){
     //printf("Gen: %d \n", j);
     // printf("Original state:  \n");
 
     if(disp){display(N, *p_state);}
-    //next_gen(N, *p_state, *p_state_new, temp);
-    UpdateCellsOnBlock(1, N+1, 1, N+1, *p_state, *p_state_new, temp);
+
+    //time next gen function
+
+    next_gen(N, *p_state, *p_state_new);
+
     int ***aux;
     aux = p_state;
     p_state = p_state_new;
     p_state_new = aux;
 
   }
-
+  gettimeofday(&tfin,0);
+  //write time dataa
+  float elapsed_time_sec =(tfin.tv_sec -tini.tv_sec)
+                          +(tfin.tv_usec -tini.tv_usec)/1e6;
+  //printf("elapsed time: %f\n", elapsed_time_sec);
+  FILE* ftime=NULL;
+  ftime =fopen("time_test.txt", "a+");
+  if(ftime==NULL){
+    printf("Error writing to file\n");
+  }else{
+    fprintf(ftime, "%f\n",elapsed_time_sec);
+  }
+  fclose(ftime);
+  //end timing
   //free arrays
   for(int i=0; i< N+2; i++){
     free(state[i]);
@@ -248,18 +178,5 @@ int main(int argc, char const *argv[]) {
   }
   free(state);
   free(state_new);
-  gettimeofday(&tfin,0);
-
-  float elapsed_time_sec =(tfin.tv_sec -tini.tv_sec)
-                          +(tfin.tv_usec -tini.tv_usec)/1e6;
-  //printf("elapsed time: %f\n", elapsed_time_sec);
-  FILE* ftime=NULL;
-  ftime =fopen("time.txt", "a+");
-  if(ftime==NULL){
-    printf("Error writing to file\n");
-  }else{
-    fprintf(ftime, "%f\n",elapsed_time_sec);
-  }
-  fclose(ftime);
   return 0;
 }

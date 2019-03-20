@@ -10,7 +10,7 @@ And link to graphics.c
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
-#include "graphics/graphics.h"
+#include "../graphics/graphics.h"
 
 #define MAX_GEN 200
 
@@ -61,13 +61,14 @@ void updateCell(int i, int j, int num_neighbours,
   int** state, int** state_new, int N, int L, int W){
   if(state[i][j]==1){
     //cell is on, if 2 n or 3 stays on otherwise dies
-    if(num_neighbours !=2  && num_neighbours != 3){
+    if(num_neighbours !=2  && num_neighbours !=3){
       state_new[i][j]=0;
     }else{
       state_new[i][j]=1;
       DrawCell(i,j, N, L, W);
     }
   }else{
+    //cell is dead
     state_new[i][j]=0;
     //cell is off, turn on if 3 neighbours
     if(num_neighbours ==3){
@@ -111,7 +112,7 @@ int main(int argc, char const *argv[]) {
   //Program starts:
 
   //CELL NUMBER
-  int N = 4000;
+  int N = 100;
   int** state = (int**)malloc(sizeof(int*)*(N+2));
   int** state_new = (int**)malloc(sizeof(int*)*(N+2));
   for(int i=0; i<N+2;i++){

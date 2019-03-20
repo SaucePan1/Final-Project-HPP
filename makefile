@@ -15,6 +15,9 @@ generate_with_02:${argument}
 generate_with_03:${argument}
 	@gcc $(CFLAGS) -O3 -o third_optimization ${argument} graphics/graphics.c $(LDFLAGS)
 
+generate_with_funroll:${argument}
+	@gcc $(CFLAGS) -O3 -funroll-loops -o ffast_math ${argument} graphics/graphics.c $(LDFLAGS)
+
 generate_with_ffast_math:${argument}
 	@gcc $(CFLAGS) -O3 -ffast-math -o ffast_math ${argument} graphics/graphics.c $(LDFLAGS)
 

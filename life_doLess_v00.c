@@ -85,6 +85,7 @@ void next_gen(int N, int** state, int** state_new){
       //get v3
       int v3 = state[i-1][j+1] + state[i][j+1] + state[i+1][j+1];
       int num_neighbours= v1+v2+v3;
+      printf("%d %d n %d \n", i, j, num_neighbours);
       //Update the Cell
       if(state[i][j]==1){
         //cell is on, if 2 n or 3 stays on otherwise dies
