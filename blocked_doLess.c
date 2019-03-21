@@ -11,7 +11,7 @@ And link to graphics.c
 #include <string.h>
 #include <sys/time.h>
 
-#define blockSz 10
+#define blockSz 200
 //for testing 200
 const int cellColor=0;
 const int windowWidth=800;
@@ -87,42 +87,6 @@ void display(int N, int** state){
 // return;
 // }
 
-void testUpdateCellsOnBlock(int iStart, int iEnd, int jStart, int jEnd,
-  int **state, int** state_new, int** temp){
-
-
-  for(int i=iStart; i < iEnd; i++){
-    int j=jStart;
-    int v1 = state[i-1][j-1] + state[i][j-1]+ state[i+1][j-1];
-    int v2 = state[i-1][j] + state[i+1][j];
-    for(j=jStart; j < jEnd; j++){
-      //get v3
-      int v3 = state[i-1][j+1] + state[i][j+1] + state[i+1][j+1];
-      int num_neighbours= v1+v2+v3;
-      printf("%d %d n %d \n", i, j, num_neighbours);
-      //Update the Cell
-      if(state[i][j]==1){
-        //cell is on, if 2 n or 3 stays on otherwise dies
-        //we correct v2
-        v2++;
-        if(num_neighbours !=2  && num_neighbours != 3){
-          state_new[i][j]=0;
-        }else{
-          state_new[i][j]=1;
-        }
-      }else{
-        state_new[i][j]=0;
-        //cell is off, turn on if 3 neighbours
-        if(num_neighbours ==3){
-          state_new[i][j]=1;
-        }
-      }
-        v1 = v2;
-        v2 = v3 - state[i][j+1];
-    }
-  }
-}
-
 void UpdateCellsOnBlock(int iStart, int iEnd, int jStart, int jEnd,
   int **state, int** state_new, int** temp){
 
@@ -130,19 +94,15 @@ void UpdateCellsOnBlock(int iStart, int iEnd, int jStart, int jEnd,
   for(int i = 0; i<blockSz+2; i++){
     memcpy(temp[i], &state[iStart+i-1][jStart-1], sizeof(int)*(blockSz+2));
   }
-
-
-  // printf("Display state: \n");
-  // display(10, state);
-  // printf("Display temp\n");
-  // display_temp(blockSz+2, temp);
-
-  for(int i=1; i < blockSz+1; i++){
+  int max_i = iEnd-iStart;
+  int max_j = jEnd-jStart;
+  //implement algorithm as usual
+  for(int i=1; i < max_i+1; i++){
     int j=1;
     int v1 = temp[i-1][j-1] + temp[i][j-1]+ temp[i+1][j-1];
     //int v1 = 0;
     int v2 = temp[i-1][j] + temp[i+1][j];
-    for(j=1; j < blockSz+1; j++){
+    for(j=1; j < max_j+1; j++){
       //get v3
       int v3 = temp[i-1][j+1] + temp[i][j+1] + temp[i+1][j+1];
       int num_neighbours= v1+v2+v3;
@@ -167,25 +127,25 @@ void UpdateCellsOnBlock(int iStart, int iEnd, int jStart, int jEnd,
       v2 = v3 - temp[i][j+1];
     }
   }
+  return;
 }
 
 
 void next_gen(int N, int** state, int** state_new, int** temp){
-
+  if(N%blockSz != 0){printf("BlockSz does not divide N!\n"); return;}
+  // printf("Display state: \n");
+  // display(10, state);
   int iStart;
-  for(iStart=1; iStart+blockSz<N+1; iStart+=blockSz){
+  for(iStart=1; iStart<N+1; iStart+=blockSz){
     int iEnd = iStart+blockSz;
     int jStart;
-    for(jStart = 1; jStart+blockSz< N+1; jStart += blockSz){
+    for(jStart = 1; jStart<N+1; jStart += blockSz){
       int jEnd = jStart+blockSz;
-      testUpdateCellsOnBlock(iStart, iEnd, jStart, jEnd,
+      //printf("Calling Update with iStart= %d, jStart = %d \n", iStart, jStart);
+      UpdateCellsOnBlock(iStart, iEnd, jStart, jEnd,
          state, state_new, temp);
     }
-    //Update remaining j
-    testUpdateCellsOnBlock(iStart, iEnd, jStart, N+1, state, state_new, temp);
   }
-  //Update remaining i
-  testUpdateCellsOnBlock(iStart, N+1, 1, N+1, state, state_new, temp);
   return;
 }
 
@@ -232,8 +192,8 @@ int main(int argc, char const *argv[]) {
     // printf("Original state:  \n");
 
     if(disp){display(N, *p_state);}
-    //next_gen(N, *p_state, *p_state_new, temp);
-    UpdateCellsOnBlock(1, N+1, 1, N+1, *p_state, *p_state_new, temp);
+    next_gen(N, *p_state, *p_state_new, temp);
+    //UpdateCellsOnBlock(1, N+1, 1, N+1, *p_state, *p_state_new, temp);
     int ***aux;
     aux = p_state;
     p_state = p_state_new;

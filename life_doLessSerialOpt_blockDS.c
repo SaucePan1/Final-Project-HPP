@@ -70,15 +70,20 @@ void UpdateCellsOnBlock(int iStart, int iEnd, int jStart, int jEnd,
   int **state, int** state_new, int** temp){
 
   //We need padding!
-  for(int i = 0; i<iEnd+2; i++){
-    memcpy(temp[i], &state[iStart+i-1][jStart-1], sizeof(int)*(blocksz+2));
+  for(int i = 0; i<blockSz+2; i++){
+    memcpy(temp[i], &state[iStart+i-1][jStart-1], sizeof(int)*(blockSz+2));
   }
-  for(int i=iStart; i < iEnd; i++){
-    int j=jStart;
+   //printf("Display temp (%d, %d): \n", iStart, jStart);
+   //display_temp(blockSz+2, temp);
+
+  int max_i = iEnd-iStart;
+  int max_j = jEnd-jStart;
+  for(int i=1; i < max_i+1; i++){
+    int j=1;
     int v1 = temp[i-1][j-1] + temp[i][j-1]+ temp[i+1][j-1];
     //int v1 = 0;
     int v2 = temp[i-1][j] + temp[i+1][j];
-    for(j=jStart; j < jEnd; j++){
+    for(j=1; j < max_j+1; j++){
       //get v3
       int v3 = temp[i-1][j+1] + temp[i][j+1] + temp[i+1][j+1];
       int num_neighbours= v1+v2+v3;
@@ -88,15 +93,15 @@ void UpdateCellsOnBlock(int iStart, int iEnd, int jStart, int jEnd,
         //we correct v2
         v2++;
         if(num_neighbours !=2  && num_neighbours != 3){
-          state_new[i][j]=0;
+          state_new[iStart -1 +i][jStart -1 +j]=0;
         }else{
-          state_new[i][j]=1;
+          state_new[iStart -1 +i][jStart -1 +j]=1;
         }
       }else{
-        state_new[i][j]=0;
+        state_new[iStart -1 +i][jStart -1 +j]=0;
         //cell is off, turn on if 3 neighbours
         if(num_neighbours ==3){
-          state_new[i][j]=1;
+          state_new[iStart -1 +i][jStart -1 +j]=1;
         }
       }
       v1 = v2;
@@ -108,145 +113,22 @@ void UpdateCellsOnBlock(int iStart, int iEnd, int jStart, int jEnd,
 
 
 
-
-void next_gen(int N, int**  state, int**  state_new){
-  //get neighbours
-  //get first row
-  int ** temp = (int)malloc(sizeof(int)*blocksz);
-  for(int i=0; i<blocksz; i++){
-    temp[i]=(int)malloc(sizeof(int)*blocksz);
-  }
-  for(int iStart; iStart< N+1; iStart+=blocksz){
-    int iEnd = iStart + blocksz;
-    for(int i=1; i < N+1; i++){
-    int j=1;
-    int v1 = 0, v2 = state[i-1][j] + state[i+1][j];
-    for(j=1; j < N+1; j+=4){
-      //FIRST LOOP
-      //get v3
-      int v3 = state[i-1][j+1] + state[i][j+1] + state[i+1][j+1];
-      int num_neighbours= v1+v2+v3;
-      //Update the Cell
-      if(state[i][j]==1){
-        //cell is on, if 2 n or 3 stays on otherwise dies
-        //we correct v2
-        v2++;
-        if(num_neighbours <2 || num_neighbours >3){
-          state_new[i][j]=0;
-        }else{
-          state_new[i][j]=1;
-        }
-      }else{
-        //cell is off, turn on if 3 neighbours
-        if(num_neighbours ==3){
-          state_new[i][j]=1;
-        }else{
-          state_new[i][j]=0;
-        }
-      }
-      v1 = v2;
-      v2 = v3 - state[i][j+1];
-
-      //SECOND LOOP
-      //get v3
-      v3 = state[i-1][j+2] + state[i][j+2] + state[i+1][j+2];
-      num_neighbours= v1+v2+v3;
-      //Update the Cell
-      if(state[i][j+1]==1){
-        //cell is on, if 2 n or 3 stays on otherwise dies
-        //we correct v2
-        v2++;
-        if(num_neighbours <2 || num_neighbours >3){
-          state_new[i][j+1]=0;
-        }else{
-          state_new[i][j+1]=1;
-        }
-      }else{
-        //cell is off, turn on if 3 neighbours
-        if(num_neighbours ==3){
-          state_new[i][j+1]=1;
-        }else{
-          state_new[i][j+1]=0;
-        }
-      }
-      v1 = v2;
-      v2 = v3 - state[i][j+2];
-      //THIRD LOOP
-      v3 = state[i-1][j+3] + state[i][j+3] + state[i+1][j+3];
-      num_neighbours= v1+v2+v3;
-      //Update the Cell
-      if(state[i][j+2]==1){
-        //cell is on, if 2 n or 3 stays on otherwise dies
-        //we correct v2
-        v2++;
-        if(num_neighbours <2 || num_neighbours >3){
-          state_new[i][j+2]=0;
-        }else{
-          state_new[i][j+2]=1;
-        }
-      }else{
-        //cell is off, turn on if 3 neighbours
-        if(num_neighbours ==3){
-          state_new[i][j+2]=1;
-        }else{
-          state_new[i][j+2]=0;
-        }
-      }
-      v1 = v2;
-      v2 = v3 - state[i][j+3];
-      //FOURTH LOOP
-      v3 = state[i-1][j+4] + state[i][j+4] + state[i+1][j+4];
-      num_neighbours= v1+v2+v3;
-      //Update the Cell
-      if(state[i][j+3]==1){
-        //cell is on, if 2 n or 3 stays on otherwise dies
-        //we correct v2
-        v2++;
-        if(num_neighbours <2 || num_neighbours >3){
-          state_new[i][j+3]=0;
-        }else{
-          state_new[i][j+3]=1;
-        }
-      }else{
-        //cell is off, turn on if 3 neighbours
-        if(num_neighbours ==3){
-          state_new[i][j+3]=1;
-        }else{
-          state_new[i][j+3]=0;
-        }
-      }
-      v1 = v2;
-      v2 = v3 - state[i][j+4];
-    }
-  //We are outside for loop for collumns j
-  //DO THE REST
-  for(int k=j; k< N+1; k++){
-    //get v3
-    int v3 = state[i-1][k+1] + state[i][k+1] + state[i+1][k+1];
-    int num_neighbours= v1+v2+v3;
-    //Update the Cell
-    if(state[i][k]==3){
-      //cell is on, if 2 n or 3 stays on otherwise dies
-      //we correct v2
-      v2++;
-      if(num_neighbours <2 || num_neighbours >3){
-        state_new[i][k]=0;
-      }else{
-        state_new[i][k]=1;
-      }
-    }else{
-      //cell is off, turn on if 3 neighbours
-      if(num_neighbours ==3){
-        state_new[i][k]=1;
-      }else{
-        state_new[i][k]=0;
-      }
-    }
-    v1 = v2;
-    v2 = v3 - state[i][k+1];
+void next_gen(int N, int** state, int** state_new, int** temp){
+  if(N%blockSz != 0){printf("BlockSz does not divide N!\n"); return;}
+  // printf("Display state: \n");
+  // display(10, state);
+  int iStart;
+  for(iStart=1; iStart<N+1; iStart+=blockSz){
+    int iEnd = iStart+blockSz;
+    int jStart;
+    for(jStart = 1; jStart<N+1; jStart += blockSz){
+      int jEnd = jStart+blockSz;
+      //printf("Calling Update with iStart= %d, jStart = %d \n", iStart, jStart);
+      UpdateCellsOnBlock(iStart, iEnd, jStart, jEnd,
+         state, state_new, temp);
     }
   }
-  }
+  return;
 }
 
 void next_gen_org(int N, int** state, int** state_new){
