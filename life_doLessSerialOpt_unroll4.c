@@ -45,14 +45,15 @@ void display(int N, int** state){
 }
 
 
-
 void next_gen(int N, int** state, int** state_new){
   //get neighbours
   //get first row
   for(int i=1; i < N+1; i++){
     int j=1;
     int v1 = 0, v2 = state[i-1][j] + state[i+1][j];
-    for(j=1; j < N+1; j++){
+    //Loop is unrolled with unroll factor 4.
+    for(j=1; j < N+1; j+=4){
+      //FIRST ITERATION
       //get v3
       int v3 = state[i-1][j+1] + state[i][j+1] + state[i+1][j+1];
       int num_neighbours= v1+v2+v3;
@@ -77,7 +78,112 @@ void next_gen(int N, int** state, int** state_new){
       }
       v1 = v2;
       v2 = v3 - state[i][j+1];
+      //SECOND ITERATION
+      //get v3
+      v3 = state[i-1][j+2] + state[i][j+2] + state[i+1][j+2];
+      num_neighbours= v1+v2+v3;
+      //printf("%d %d n %d \n", i, j, num_neighbours);
+      //Update the Cell
+      if(state[i][j+1]==1){
+        //cell is on, if 2 n or 3 stays on otherwise dies
+        //we correct v2
+        v2++;
+        if(num_neighbours <2  || num_neighbours >3){
+          state_new[i][j+1]=0;
+        }else{
+          state_new[i][j+1]=1;
+        }
+      }else{
+        //cell is off, turn on if 3 neighbours
+        if(num_neighbours ==3){
+          state_new[i][j+1]=1;
+        }else{
+          state_new[i][j+1]=0;
+        }
+      }
+      v1 = v2;
+      v2 = v3 - state[i][j+2];
+      //THIRD ITERATION
+      //get v3
+      v3 = state[i-1][j+3] + state[i][j+3] + state[i+1][j+3];
+      num_neighbours= v1+v2+v3;
+      //printf("%d %d n %d \n", i, j, num_neighbours);
+      //Update the Cell
+      if(state[i][j+2]==1){
+        //cell is on, if 2 n or 3 stays on otherwise dies
+        //we correct v2
+        v2++;
+        if(num_neighbours <2  || num_neighbours >3){
+          state_new[i][j+2]=0;
+        }else{
+          state_new[i][j+2]=1;
+        }
+      }else{
+        //cell is off, turn on if 3 neighbours
+        if(num_neighbours ==3){
+          state_new[i][j+2]=1;
+        }else{
+          state_new[i][j+2]=0;
+        }
+      }
+      v1 = v2;
+      v2 = v3 - state[i][j+3];
+      //FOURTH ITERATION
+      //get v3
+      v3 = state[i-1][j+4] + state[i][j+4] + state[i+1][j+4];
+      num_neighbours= v1+v2+v3;
+      //printf("%d %d n %d \n", i, j, num_neighbours);
+      //Update the Cell
+      if(state[i][j+3]==1){
+        //cell is on, if 2 n or 3 stays on otherwise dies
+        //we correct v2
+        v2++;
+        if(num_neighbours <2  || num_neighbours >3){
+          state_new[i][j+3]=0;
+        }else{
+          state_new[i][j+3]=1;
+        }
+      }else{
+        //cell is off, turn on if 3 neighbours
+        if(num_neighbours ==3){
+          state_new[i][j+3]=1;
+        }else{
+          state_new[i][j+3]=0;
+        }
+      }
+      v1 = v2;
+      v2 = v3 - state[i][j+4];
+
+      //END LOOP j
     }
+    //do the rest
+    for(int k=j; k<N+1; k++){
+      //get v3
+      int v3 = state[i-1][k+1] + state[i][k+1] + state[i+1][k+1];
+      int num_neighbours= v1+v2+v3;
+      //Update the Cell
+      if(state[i][k]==1){
+        //cell is on, if 2 n or 3 stays on otherwise dies
+        //we correct v2
+        v2++;
+        if(num_neighbours <2  || num_neighbours >3){
+          state_new[i][k]=0;
+        }else{
+          state_new[i][k]=1;
+        }
+      }else{
+        //cell is off, turn on if 3 neighbours
+        if(num_neighbours ==3){
+          state_new[i][k]=1;
+        }else{
+          state_new[i][k]=0;
+        }
+      }
+      v1 = v2;
+      v2 = v3 - state[i][k+1];
+      //END LOOP k
+    }
+    //END LOOP i
   }
 }
 

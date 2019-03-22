@@ -69,14 +69,13 @@ void display(int N, int** state){
 void next_gen(int N, int** state, int** state_new, int** v3_neighbours, int** v3_neighbours_next){
   //get neighbours
   //get first row
+
   for(int i=1; i < N+1; i++){
     int j=1;
     int v1 = 0, v2 = state[i-1][j] + state[i+1][j];
     for(j=1; j < N+1; j++){
       //get v3
-      int v3 = state[i-1][j+1] + state[i][j+1] + state[i+1][j+1];
-      int v3_n = v3_neighbours[i][j];
-      if(v3_n != v3){ printf("there is a bug at v3 %d, %d", i,j);}
+      int v3 = v3_neighbours[i][j];
 
       int num_neighbours= v1+v2+v3;
       //printf("%d %d n %d \n", i, j, num_neighbours);
@@ -84,27 +83,34 @@ void next_gen(int N, int** state, int** state_new, int** v3_neighbours, int** v3
       if(state[i][j]==1){
         //cell is on, if 2 n or 3 stays on otherwise dies
         //we correct v2
+        v3_neighbours_next[i-1][j-1] = v3_neighbours[i-1][j-1];
+        v3_neighbours_next[i][j-1] = v3_neighbours[i][j-1];
+        v3_neighbours_next[i+1][j-1] = v3_neighbours[i+1][j-1];
         v2++;
         if(num_neighbours !=2  && num_neighbours != 3){
           //i, j died we change the state and update the neighbour matrix
           state_new[i][j]=0;
           //Following cells lost a v3 neighbour:
-          v3_neighbours_next[i-1][j-1]--;
-          v3_neighbours_next[i][j-1]--;
-          v3_neighbours_next[i+1][j-1]--;
+          v3_neighbours_next[i-1][j-1] = v3_neighbours[i-1][j-1] -1;
+          v3_neighbours_next[i][j-1] = v3_neighbours[i][j-1] -1;
+          v3_neighbours_next[i+1][j-1] = v3_neighbours[i+1][j-1] -1;
         }else{
           state_new[i][j]=1;
         }
       }else{
-        state_new[i][j]=0;
-        //cell is off, turn on if 3 neighbours
         if(num_neighbours ==3){
           //new birth, set new state and update neighbours
           state_new[i][j]=1;
           //Following cells gained a v3 neighbour:
-          v3_neighbours_next[i-1][j-1]++;
-          v3_neighbours_next[i][j-1]++;
-          v3_neighbours_next[i+1][j-1]++;
+          v3_neighbours_next[i-1][j-1] = v3_neighbours[i-1][j-1] +1;
+          v3_neighbours_next[i][j-1] = v3_neighbours[i][j-1] +1;
+          v3_neighbours_next[i+1][j-1] = v3_neighbours[i+1][j-1] +1;
+        }else{
+          state_new[i][j]=0;
+          //cell is off, turn on if 3 neighbours
+          v3_neighbours_next[i-1][j-1] = v3_neighbours[i-1][j-1];
+          v3_neighbours_next[i][j-1] = v3_neighbours[i][j-1];
+          v3_neighbours_next[i+1][j-1] = v3_neighbours[i+1][j-1];
         }
       }
       v1 = v2;
@@ -170,25 +176,24 @@ int main(int argc, char const *argv[]) {
   read_data(filename, state, N);
   read_data(filename, state_new, N);
 
-  printf("Constructing v3_neighbours ... \n");
   construct_v3_neighbours(N, state, v3_neighbours, v3_neighbours_new);
-  printf("Finished constructing v3_neighbours ... \n");
   int*** p_state = &state;
   int*** p_state_new = &state_new;
+  int*** p_v3_neighbours = &v3_neighbours;
+  int*** p_v3_neighbours_new= &v3_neighbours_new;
   for(int j=0;j< MAX_GEN; j++){
     //printf("Gen: %d \n", j);
     // printf("Original state:  \n");
     if(disp){display(N, *p_state);}
-    next_gen(N, *p_state, *p_state_new, v3_neighbours, v3_neighbours_new);
+    next_gen(N, *p_state, *p_state_new, *p_v3_neighbours, *p_v3_neighbours_new);
     int ***aux;
     aux = p_state;
     p_state = p_state_new;
     p_state_new = aux;
-    //Copy neighbour matrix
-    for(int i=1; i<N+1; i++){
-      memcpy(v3_neighbours[i], v3_neighbours_new[i], sizeof(int)*(N+2));
-    }
 
+    aux = p_v3_neighbours;
+    p_v3_neighbours = p_v3_neighbours_new;
+    p_v3_neighbours_new= aux;
   }
 
   //free arrays
